@@ -1,0 +1,45 @@
+version: "3"
+services:
+  pihole:
+    image: pihole/pihole:latest
+    ports:
+      - "8084:80/tcp"
+      - "192.168.1.118:53:53/tcp"
+      - "192.168.1.118:53:53/udp"
+    expose:
+      - "443"
+      - "67"
+    restart: unless-stopped
+    cap_add:
+        - NET_ADMIN
+    dns:
+      - 127.0.0.1
+      - 1.1.1.1
+    environment:
+      ServerIP: 192.168.1.118
+      WEBPASSWORD: "1234"
+      FTLCONF_REPLY_ADDR4: 192.168.1.118
+
+      DNSMASQ_LISTENING: all
+    volumes:
+      - '/srv/dev-disk-by-label-Disco1/Docker/Pihole/etc-pihole:/etc/pihole'
+      - '/srv/dev-disk-by-label-Disco1/Docker/Pihole/etc-dnsmasq.d:/etc/dnsmasq.d'  
+    depends_on:
+      - dhcphelper
+    networks:
+      backend:
+        ipv4_address: '172.31.0.100'
+
+  dhcphelper:
+    build: https://raw.githubusercontent.com/fjramirez1987/pihole-dhcp-docker/main/dockerfile
+    restart: unless-stopped
+    network_mode: "host"
+    command: -s 172.31.0.100
+    cap_add:
+      - NET_ADMIN
+
+networks:
+  backend:
+    ipam:
+      config:
+        - subnet: 172.31.0.0/16
